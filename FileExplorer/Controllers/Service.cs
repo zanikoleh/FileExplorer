@@ -168,7 +168,7 @@ namespace FileExplorer.Controllers
                 return "0";
             }
             return (from item in files
-                    where item.Length >= 104857600
+                    where item != null && item.Length >= 104857600
                     select item).ToList().Count().ToString();
         }
 
@@ -184,7 +184,7 @@ namespace FileExplorer.Controllers
                 return "0";
             }
             return (from item in files
-                    where item.Length > 10485760 && item.Length <= 52428800
+                    where item != null && item.Length > 10485760 && item.Length <= 52428800
                     select item).ToList().Count().ToString();
         }
 
@@ -195,12 +195,8 @@ namespace FileExplorer.Controllers
         /// <returns>String representation of number</returns>
         private string GetSmall(List<FileInfo> files)
         {
-            if(files == null)
-            {
-                return "0";
-            }
             return (from item in files
-                    where item.Length <= 1048576
+                    where item != null && item.Length <= 1048576
                     select item).ToList().Count().ToString();
         }
 
