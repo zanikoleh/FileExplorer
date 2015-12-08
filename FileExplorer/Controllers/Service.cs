@@ -117,9 +117,7 @@ namespace FileExplorer.Controllers
                     dir.path = path;
                     if (files != null)
                     {
-                        dir.Info.Small = GetSmall(files);
-                        dir.Info.Medium = GetMedium(files);
-                        dir.Info.Large = GetLarge(files);
+                        dir.Info = GetInfoOnFilesOptimized(files);
                     }
                     dir.Directories = GetListOfDirectoriesAndFiles(path);
                     return dir;
@@ -135,7 +133,7 @@ namespace FileExplorer.Controllers
         private List<DirectoryModel> GetListOfDirectoriesAndFiles(string path)
         {
             List<DirectoryModel> result = new List<DirectoryModel>();
-            foreach (var item in new DirectoryInfo(path).GetDirectories())
+            foreach(var item in new DirectoryInfo(path).GetDirectories())
             {
                 try
                 {
@@ -186,6 +184,57 @@ namespace FileExplorer.Controllers
             return (from item in files
                     where item != null && item.Length > 10485760 && item.Length <= 52428800
                     select item).ToList().Count().ToString();
+        }
+
+        private InfoModel GetInfoOnFilesOptimized(List<FileInfo> collection)
+        {
+            long small = 0;
+            long medium = 0;
+            long large = 0;
+            Parallel.ForEach(collection, file =>
+            {
+                {
+                    if (file != null)
+                    {
+                        if (file.Length <= 10485760)
+                        {
+                            small += 1;
+                        }
+                        else
+                        {
+                            if (file.Length > 10485760 && file.Length <= 52428800)
+                            {
+                                medium += 1;
+                            }
+                            else
+                            {
+                                if (file.Length >= 104857600)
+                                {
+                                    large += 1;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            return new InfoModel { Small = small.ToString(), Medium = medium.ToString(), Large = large.ToString() };
+        }
+
+        /// <summary>
+        /// Gets InfoModel representation of all files in directories and subdirectories in current folder
+        /// </summary>
+        /// <param name="collection"></param>
+        /// <returns></returns>
+        private InfoModel GetInfoOnFiles(List <FileInfo> collection)
+        {
+            var result = collection.Select(files => new InfoModel
+            {
+                Small = collection.Count(s => (s != null && s.Length <= 1048576)).ToString(),
+                Medium = collection.Count(s => (s != null && s.Length > 10485760 && s.Length <= 52428800)).ToString(),
+                Large = collection.Count(s => (s != null && s.Length >= 104857600)).ToString()
+            }).FirstOrDefault();
+            return result;
         }
 
         /// <summary>
